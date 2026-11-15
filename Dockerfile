@@ -1,25 +1,25 @@
-# ===== Stage 1: Build the Vite app =====
-FROM node:20-alpine AS build
+# Plainplay as a small standalone Node server.
+#   docker build -t plainplay .
+#   docker run -p 3000:3000 -e YOUTUBE_API_KEY=... plainplay
 
-# Set working directory
+FROM node:22-alpine AS deps
 WORKDIR /app
-
-# Copy package files and install dependencies
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copy all source files and build
+FROM node:22-alpine AS build
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1 BUILD_STANDALONE=1
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# ===== Stage 2: Serve with Nginx =====
-FROM nginx:alpine
-
-# Copy build output from previous stage to Nginx web root
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Expose port 80
-EXPOSE 80
-
-# Default command to run Nginx
-CMD ["nginx", "-g", "daemon off;"]
+FROM node:22-alpine AS run
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
+USER node
+EXPOSE 3000
+CMD ["node", "server.js"]
