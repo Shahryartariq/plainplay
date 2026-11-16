@@ -2,7 +2,7 @@
 
 **YouTube without the rabbit hole.** Search for a video, watch it, and leave. Plainplay has no home feed, no recommended videos, no comments and no Shorts shelf.
 
-**Live demo:** https://plainplay.vercel.app <!-- set after the first deploy -->
+**Live demo:** https://plainplay.vercel.app
 
 ![Plainplay search results in the light theme](docs/screenshots/search-light.png)
 
